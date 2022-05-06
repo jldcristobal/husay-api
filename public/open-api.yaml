@@ -1,0 +1,464 @@
+openapi: '3.0.0'
+info:
+  title: 'HUSAY'
+  version: '1.0.0'
+  description: >-
+    Documentation for Husay APIs
+
+paths:
+  "/api/health":
+    get:
+      tags:
+      - Monitor Health
+
+      operationId: monitorHealth
+      summary: Get health status of app
+      description: Get health status of app
+      responses:
+        default:
+          description: Health check response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Server is up!"
+
+  "/api/login":
+    post:
+      summary: Create access token 
+      tags:
+      - Access Token
+      description: Get access token
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/definitions/accessTokenSource"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: true
+                    result:
+                      type: string
+                      example: "xxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        "401":
+          description: Error
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: false
+                    message:
+                      type: string
+                      example: "User credentials are invalid"
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/ErrorResponse"
+  
+  "/api/user/add":
+    post:
+      summary: Create new user
+      tags:
+      - User Enrollment
+      description: Register user
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: integer
+                  description: "Role Type. Values: 1-admin, 2-artist"
+                  enum: [1, 2]
+                  example: 2
+                username:
+                  type: string
+                  example: "bodcristobal"
+                email:
+                  type: string
+                  example: "jod_bod02@yahoo.com"
+                password:
+                  type: string
+                  example: "password"
+                artistProfile:
+                  type: object
+                  description: "Artist Profile. Do not include artistProfile object if role=1 (admin)"
+                  properties:
+                    firstName: 
+                      type: string
+                      example: "Jodie"
+                    middleName: 
+                      type: string
+                      example: "Pacay"
+                    lastName: 
+                      type: string
+                      example: "Cristobal"
+                    mobileNumber: 
+                      type: number
+                      example: 09262449975
+                    dateOfBirth: 
+                      type: string
+                      example: "1994-01-06"
+                    cityOfResidencePermanent: 
+                      type: string
+                      example: "Pasay"
+                    provincePermanent: 
+                      type: string
+                      example: "Metro Manila"
+                    regionPermanent: 
+                      type: string
+                      example: "NCR"
+                    cityOfResidenceCurrent: 
+                      type: string
+                      example: "Manila"
+                    provinceCurrent: 
+                      type: string
+                      example: "Metro Manila"
+                    regionCurrent: 
+                      type: string
+                      example: "NCR"
+                    socialMediaPage1: 
+                      type: string
+                      example: "www.google.com"
+                    socialMediaPage2: 
+                      type: string
+                      example: "www.facebook.com"
+                    socialMediaPage3: 
+                      type: string
+                      example: "www.twitter.com"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: true
+                    result:
+                      type: string
+                      example: "Artist enrolled successfully"
+        "400":
+          description: Error
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: false
+                    result:
+                      type: string
+                      example: "User already exists"     
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/ErrorResponse"
+
+  "/api/user/forgot-password":
+    post:
+      summary: Reset user password 
+      tags:
+      - User Enrollment
+      description: Reset user password
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: 'jod_bod02@yahoo.com'
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: true
+                    message:
+                      type: string
+                      example: 'Password reset link sent to j*******2@yahoo.com'
+                    result:
+                      type: object
+                      example: {
+                          "messageId": "<ac60389a-43ef-8e6c-cfde-0d73fa43f697.mailgun.org>"
+                      }
+        "400":
+          description: Error
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: false
+                    message:
+                      type: string
+                      example: 'Email does not exist'
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/ErrorResponse"
+  
+  "/api/user/forgot-password/{userId}/{token}":
+    get:
+      summary: Verify User ID and Token
+      tags:
+      - User Enrollment
+      description: Verify User ID and Token
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: userId
+          in: path
+          description: User ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: token
+          in: path
+          description: Password reset token
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: true
+                    message:
+                      type: string
+                      example: "Token verified"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    example: {
+                      name: "JsonWebTokenError",
+                      message: "invalid signature"
+                    }
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/ErrorResponse"
+    post:
+      summary: Reset password 
+      tags:
+      - User Enrollment
+      description: Reset password
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: userId
+          in: path
+          description: User ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: token
+          in: path
+          description: Password reset token
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  example: 'password'
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: true
+                    message:
+                      type: string
+                      example: 'Password reset successfully'
+        "400":
+          description: Error
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: false
+                    message:
+                      type: string
+                      example: "Password reset failed"
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/ErrorResponse"
+   
+
+  "/api/user/{userId}/change-password":
+    put:
+      summary: Change password
+      tags:
+      - User Enrollment
+      description: Change password
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: userId
+          in: path
+          description: User ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  example: 'new password'
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: true
+                    result:
+                      type: string
+                      example: "Password updated successfully"
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/ErrorResponse"
+      security:
+      - bearerAuth: []
+  
+ 
+definitions:
+  accessTokenSource:
+    properties:
+        username:
+          type: string
+          example: "bodcristobal"
+        password:
+          type: string
+          example: "password"
+
+  ErrorResponse:
+    type: object
+    properties:
+      success:
+        type: boolean
+        example: false
+      message:
+        type: string
+        example: "Error message"
+              
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

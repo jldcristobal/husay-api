@@ -1,0 +1,13 @@
+# IDE
+.vscode/**
+
+# Log files
+logs/
+
+# Node Modules
+node_modules/
+
+# config
+config/default.json
+uploads/
+.env
