@@ -1,8 +1,8 @@
 'use strict';
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('artists', {
-      artistId: {
+    await queryInterface.createTable('admins', {
+      adminId: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
@@ -24,6 +24,9 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
+      adminType: {
+        type: Sequelize.STRING
+      },
       firstName: {
         type: Sequelize.STRING,
         allowNull: false
@@ -34,41 +37,6 @@ module.exports = {
       lastName: {
         type: Sequelize.STRING,
         allowNull: false
-      },
-      mobileNumber: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      dateOfBirth: {
-        type: Sequelize.DATE,
-        allowNull: false
-      },
-      cityOfResidencePermanent: {
-        type: Sequelize.STRING
-      },
-      provincePermanent: {
-        type: Sequelize.STRING
-      },
-      regionPermanent: {
-        type: Sequelize.STRING
-      },
-      cityOfResidenceCurrent: {
-        type: Sequelize.STRING
-      },
-      provinceCurrent: {
-        type: Sequelize.STRING
-      },
-      regionCurrent: {
-        type: Sequelize.STRING
-      },
-      socialMediaPage1: {
-        type: Sequelize.STRING
-      },
-      socialMediaPage2: {
-        type: Sequelize.STRING
-      },
-      socialMediaPage3: {
-        type: Sequelize.STRING
       },
       createdAt: {
         allowNull: false,
@@ -82,6 +50,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('artists');
+    await queryInterface.dropTable('admins');
   }
 };

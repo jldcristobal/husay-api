@@ -3,17 +3,26 @@ const { DataTypes } = require('sequelize');
 
 const Artist = sequelize.define('artists', {
   artistId: {
-    allowNull: false,
     autoIncrement: true,
     primaryKey: true,
     type: DataTypes.INTEGER
   },
-  userId: {
-    type: DataTypes.INTEGER
+  username: {
+    type: DataTypes.STRING
+  },
+  email: {
+    type: DataTypes.STRING,
+    unique: true,
+    validate: {isEmail: true}
+  },
+  password: {
+    type: DataTypes.STRING
+  },
+  salt: {
+    type: DataTypes.STRING
   },
   firstName: {
-    type: DataTypes.STRING,
-    allowNull: false
+    type: DataTypes.STRING
   },
   middleName: {
     type: DataTypes.STRING
@@ -23,7 +32,7 @@ const Artist = sequelize.define('artists', {
     allowNull: false
   },
   mobileNumber: {
-    type: DataTypes.NUMBER
+    type: DataTypes.STRING
   },
   dateOfBirth: {
     type: DataTypes.DATEONLY
@@ -59,7 +68,6 @@ const Artist = sequelize.define('artists', {
     validate: {isUrl: true}
   },
   createdAt: {
-    allowNull: false,
     type: DataTypes.DATE
   },
   updatedAt: {

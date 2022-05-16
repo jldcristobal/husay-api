@@ -1,19 +1,11 @@
 const sequelize = require('../helpers/mysql-db-helper');
 const { DataTypes } = require('sequelize');
 
-const CreativeIndustry = sequelize.define('creative_industries', {
-  creativeIndustryId: {
-    autoIncrement: true,
-    primaryKey: true,
+const ArtistPortfolio = sequelize.define('artist_portfolios', {
+  artistId: {
     type: DataTypes.INTEGER
   },
-  domain: {
-    type: DataTypes.STRING,
-  },
-  artistType: {
-    type: DataTypes.STRING
-  },
-  sector: {
+  filename: {
     type: DataTypes.STRING,
   },
   createdAt: {
@@ -29,4 +21,4 @@ const CreativeIndustry = sequelize.define('creative_industries', {
     timestamps: false
   });
 
-  module.exports = CreativeIndustry
+  module.exports = ArtistPortfolio

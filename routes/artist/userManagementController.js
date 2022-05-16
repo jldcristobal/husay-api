@@ -3,15 +3,72 @@ const nodemailer = require("nodemailer");
 const nodemailMailgun = require('nodemailer-mailgun-transport')
 const jwt = require('jsonwebtoken')
 
-const User = require('../../models/user')
 const Artist = require('../../models/artist')
 
 /**
  * Controller object
  */
-const userEnrollment = {};
+const userManagement = {};
 
-userEnrollment.userEnroll = async (req, res) => {
+userManagement.login = async (req, res) => {
+    let jsonRes;
+
+    try {
+        const username = req.body.username;
+        const getArtist = await Artist.findOne({
+            where: { username: username }
+        })
+        
+        if(getArtist === null) {
+            jsonRes = {
+                statusCode: 401,
+                success: false,
+                message: 'Login credentials are invalid'
+            };
+        } else {
+            const password = req.body.password;
+            let salt = getArtist.salt
+            const passwordHash = util.hashPassword(password, salt);
+
+            if(passwordHash === getArtist.password) {
+                let userDetails = {
+                    artistId: getArtist.artistId,
+                    username: getArtist.username,
+                    email: getArtist.email,
+                    name: getArtist.lastName + ', ' + getArtist.firstName
+                };
+
+                // generate token
+                let token = jwt.sign(userDetails, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRY }); 
+
+                jsonRes = {
+                    statusCode: 200,
+                    success: true,
+                    result: {
+                        token
+                    }
+                };
+
+            } else {
+                jsonRes = {
+                    statusCode: 401,
+                    success: false,
+                    message: 'Login credentials are invalid'
+                };
+            }
+        }
+    } catch(error) {
+        jsonRes = {
+            statusCode: 500,
+            success: false,
+            error: error,
+        };
+    } finally {
+        util.sendResponse(res, jsonRes); 
+    }
+};
+
+userManagement.userEnroll = async (req, res) => {
 
     let jsonRes;
 
@@ -19,14 +76,27 @@ userEnrollment.userEnroll = async (req, res) => {
     const passwordHash = util.hashPassword(req.body.password, salt);
     
     try {
-        let [usr, created] = await User.findOrCreate({
+        let [, created] = await Artist.findOrCreate({
             where: { email: req.body.email },
             defaults: {
-                role: req.body.role,
                 username: req.body.username,
                 email: req.body.email,
                 password: passwordHash,
                 salt: salt,
+                firstName: req.body.firstName,
+                middleName: req.body.middleName,
+                lastName: req.body.lastName,
+                mobileNumber: req.body.mobileNumber,
+                dateOfBirth: req.body.dateOfBirth,
+                cityOfResidencePermanent: req.body.permanentAddress.city,
+                provincePermanent: req.body.permanentAddress.province,
+                regionPermanent: req.body.permanentAddress.region,
+                cityOfResidenceCurrent: req.body.currentAddress.city,
+                provinceCurrent: req.body.currentAddress.province,
+                regionCurrent: req.body.currentAddress.region,
+                socialMediaPage1: req.body.socialMediaPage1,
+                socialMediaPage2: req.body.socialMediaPage2,
+                socialMediaPage3: req.body.socialMediaPage3,
                 createdAt: new Date()
             }
         })
@@ -38,37 +108,11 @@ userEnrollment.userEnroll = async (req, res) => {
                 message: 'Email already exists'
             };
         } else {
-            if(req.body.role == 1) { // if admin
-                // insert admin info
-            } else if(req.body.role == 2 && req.body.artistProfile) { // if artist
-                let artistBody = req.body.artistProfile
-                artistBody.userId = usr.userId
-                artistBody.createdAt = new Date()
-                let [artst, created] = await Artist.findOrCreate({
-                    where: { userId: artistBody.userId },
-                    defaults: artistBody
-                })
-
-                if(!created) {
-                    jsonRes = {
-                        statusCode: 400,
-                        success: false,
-                        message: 'Artist already exists'
-                    };
-                } else {
-                    jsonRes = {
-                        statusCode: 200,
-                        success: true,
-                        message: 'Artist enrolled successfully'
-                    };
-                }
-            } else {
-                jsonRes = {
-                    statusCode: 200,
-                    success: true,
-                    message: 'User enrolled successfully'
-                }; 
-            }
+            jsonRes = {
+                statusCode: 200,
+                success: true,
+                message: 'Artist enrolled successfully'
+            };
         }
     } catch(error) {
         jsonRes = {
@@ -80,15 +124,15 @@ userEnrollment.userEnroll = async (req, res) => {
     util.sendResponse(res, jsonRes);    
 };
 
-userEnrollment.sendEmail = async (req, res) => {
+userManagement.sendEmail = async (req, res) => {
     let jsonRes
 
-    const getUser = await User.findOne({
+    const getArtist = await Artist.findOne({
         where: { email: req.body.email },
-        attributes: ['userId', 'password']
+        attributes: ['artistId', 'password']
     })
 
-    if(!getUser) {
+    if(!getArtist) {
         jsonRes = {
             statusCode: 400,
             success: false,
@@ -98,22 +142,29 @@ userEnrollment.sendEmail = async (req, res) => {
     } else {
         const payload = {
             email: req.body.email,
-            userId: getUser.userId
+            artistId: getArtist.artistId
         }
 
         const token = await jwt.sign(payload, process.env.TOKEN_SECRET, {expiresIn: process.env.TOKEN_EXPIRY})
     
-        const link = `${process.env.HOST}:${process.env.PORT}/api/user/forgot-password/${getUser.userId}/${token}`
+        const link = `${process.env.HOST}:${process.env.PORT}/api/artist/forgot-password/${getArtist.artistId}/${token}`
         
-        // send email thru mailgun
-        const auth = {
+        // NOTE: Mailtrap for temp email sending, to change to mailgun  
+        // const auth = {
+        //     auth: {
+        //         api_key: process.env.MAILGUN_KEY,
+        //         domain: process.env.MAILGUN_DOMAIN
+        //     }
+        // }
+        // const transporter = await nodemailer.createTransport(nodemailMailgun(auth))
+        const transporter = await nodemailer.createTransport({
+            host: "smtp.mailtrap.io",
+            port: 2525,
             auth: {
-                api_key: process.env.MAILGUN_KEY,
-                domain: process.env.MAILGUN_DOMAIN
+              user: "f775a828fcee7d",
+              pass: "760c54c0f1026c"
             }
-        }
-            
-        const transporter = await nodemailer.createTransport(nodemailMailgun(auth))
+        });
             
         let info = {
             from: '"Husay.co" <sample@email.com>', // sender address
@@ -124,7 +175,7 @@ userEnrollment.sendEmail = async (req, res) => {
             <h3> Good day, </h3>
             <p>You have requested a password reset to Husay.co from this account.
             To reset your password, please click the following link: <br /><br />
-            <button type="button"><a href="${link}">Reset Password</a></button> <br />
+            <button type="button"><a href="${link}">Reset Password</a></button> <br /><br />
             If the button is not working, you may also copy and paste this link to the browser: <br /><br />
             <a href="${link}">${link}</a> <br /><br />
             This link will expire in 1 hour. <br /><br />
@@ -164,21 +215,21 @@ userEnrollment.sendEmail = async (req, res) => {
     }
 }
 
-userEnrollment.verifyToken = async (req, res) => {
+userManagement.verifyToken = async (req, res) => {
     let jsonRes;
 
     try { 
         // validate user id
-        const getUser = await User.findOne({
-            where: { userId: req.params.userId },
+        const getArtist = await Artist.findOne({
+            where: { artistId: req.params.artistId },
             attributes: ['password', 'salt']
         })
 
-        if(!getUser) {
+        if(!getArtist) {
             jsonRes = {
                 statusCode: 400,
                 success: false,
-                message: 'User does not exist',
+                message: 'Artist does not exist',
             };
         } else {
             const payload = await jwt.verify(req.params.token, process.env.TOKEN_SECRET)
@@ -200,25 +251,25 @@ userEnrollment.verifyToken = async (req, res) => {
     }
 }
 
-userEnrollment.resetPassword = async (req, res) => {
+userManagement.resetPassword = async (req, res) => {
     let jsonRes;
 
     try { 
         // validate user id
-        const getUser = await User.findOne({
-            where: { userId: req.params.userId },
+        const getArtist = await Artist.findOne({
+            where: { artistId: req.params.artistId },
             attributes: ['password', 'salt']
         })
         
         await jwt.verify(req.params.token, process.env.TOKEN_SECRET)
         
         // find user with the payload email & id
-        const passwordHash = util.hashPassword(req.body.password, getUser.salt);
+        const passwordHash = util.hashPassword(req.body.password, getArtist.salt);
 
 
-        let updated = await User.update({password: passwordHash}, 
+        let updated = await Artist.update({password: passwordHash}, 
             {
-                where: { userId: req.params.userId }
+                where: { artistId: req.params.artistId }
             }
         ) 
 
@@ -247,7 +298,7 @@ userEnrollment.resetPassword = async (req, res) => {
     }
 }
 
-userEnrollment.changePassword = async (req, res) => {
+userManagement.changePassword = async (req, res) => {
 
     let jsonRes;
     
@@ -260,9 +311,9 @@ userEnrollment.changePassword = async (req, res) => {
             body.salt = salt
         }
 
-        let updated = await User.update(body, 
+        let updated = await Artist.update(body, 
             {
-                where: { userId: req.params.userId }
+                where: { artistId: req.params.artistId }
             }
         ) 
 
@@ -290,4 +341,4 @@ userEnrollment.changePassword = async (req, res) => {
     }
 };
 
-module.exports = userEnrollment;
+module.exports = userManagement;

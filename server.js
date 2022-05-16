@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');;
 const cors = require('cors');
 require('dotenv').config()
 const express = require('express');
+const fileUpload = require('express-fileupload')
 const fs = require('fs');
 const helmet = require('helmet');
 const yaml = require('js-yaml');
@@ -60,12 +61,12 @@ app.enable('trust proxy');
 /**
  * Allow external access to uploads folder
  */
-// app.use(express.static('uploads'))
+app.use(express.static('uploads'))
 
 /**
  * Allow file upload
  */
-// app.use(fileUpload());
+app.use(fileUpload());
 
 /**
  * GET home page

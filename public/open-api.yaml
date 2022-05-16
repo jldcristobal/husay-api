@@ -29,11 +29,11 @@ paths:
                     type: string
                     example: "Server is up!"
 
-  "/api/login":
+  "/api/artist/login":
     post:
       summary: Create access token 
       tags:
-      - Access Token
+      - Artist-Account Management
       description: Get access token
       consumes:
         - application/json
@@ -79,12 +79,12 @@ paths:
               schema:
                 $ref: "#/definitions/ErrorResponse"
   
-  "/api/user/add":
+  "/api/artist/add":
     post:
-      summary: Create new user
+      summary: Create new artist
       tags:
-      - User Enrollment
-      description: Register user
+      - Artist-Account Management
+      description: Register artist
       consumes:
         - application/json
       produces:
@@ -96,11 +96,6 @@ paths:
             schema:
               type: object
               properties:
-                role:
-                  type: integer
-                  description: "Role Type. Values: 1-admin, 2-artist"
-                  enum: [1, 2]
-                  example: 2
                 username:
                   type: string
                   example: "bodcristobal"
@@ -110,52 +105,54 @@ paths:
                 password:
                   type: string
                   example: "password"
-                artistProfile:
+                firstName: 
+                  type: string
+                  example: "Jodie"
+                middleName: 
+                  type: string
+                  example: "Pacay"
+                lastName: 
+                  type: string
+                  example: "Cristobal"
+                mobileNumber: 
+                  type: string
+                  example: "09262449975"
+                dateOfBirth: 
+                  type: string
+                  example: "1994-01-06"
+                permanentAddress:
                   type: object
-                  description: "Artist Profile. Do not include artistProfile object if role=1 (admin)"
                   properties:
-                    firstName: 
-                      type: string
-                      example: "Jodie"
-                    middleName: 
-                      type: string
-                      example: "Pacay"
-                    lastName: 
-                      type: string
-                      example: "Cristobal"
-                    mobileNumber: 
-                      type: number
-                      example: 09262449975
-                    dateOfBirth: 
-                      type: string
-                      example: "1994-01-06"
-                    cityOfResidencePermanent: 
+                    city: 
                       type: string
                       example: "Pasay"
-                    provincePermanent: 
+                    province: 
                       type: string
                       example: "Metro Manila"
-                    regionPermanent: 
+                    region: 
                       type: string
                       example: "NCR"
-                    cityOfResidenceCurrent: 
+                currentAddress:
+                  type: object
+                  properties:
+                    city: 
                       type: string
                       example: "Manila"
-                    provinceCurrent: 
+                    province: 
                       type: string
                       example: "Metro Manila"
-                    regionCurrent: 
+                    region: 
                       type: string
                       example: "NCR"
-                    socialMediaPage1: 
-                      type: string
-                      example: "www.google.com"
-                    socialMediaPage2: 
-                      type: string
-                      example: "www.facebook.com"
-                    socialMediaPage3: 
-                      type: string
-                      example: "www.twitter.com"
+                socialMediaPage1: 
+                  type: string
+                  example: "www.google.com"
+                socialMediaPage2: 
+                  type: string
+                  example: "www.facebook.com"
+                socialMediaPage3: 
+                  type: string
+                  example: "www.twitter.com"
       responses:
         "200":
           description: Success
@@ -190,12 +187,12 @@ paths:
               schema:
                 $ref: "#/definitions/ErrorResponse"
 
-  "/api/user/forgot-password":
+  "/api/artist/forgot-password":
     post:
-      summary: Reset user password 
+      summary: Send reset password link  
       tags:
-      - User Enrollment
-      description: Reset user password
+      - Artist-Account Management
+      description: Send reset password link to email
       consumes:
         - application/json
       produces:
@@ -249,20 +246,20 @@ paths:
               schema:
                 $ref: "#/definitions/ErrorResponse"
   
-  "/api/user/forgot-password/{userId}/{token}":
+  "/api/artist/forgot-password/{artistId}/{token}":
     get:
-      summary: Verify User ID and Token
+      summary: Verify Artist ID and Token
       tags:
-      - User Enrollment
-      description: Verify User ID and Token
+      - Artist-Account Management
+      description: Verify Artist ID and Token
       consumes:
         - application/json
       produces:
         - application/json
       parameters:
-        - name: userId
+        - name: artistId
           in: path
-          description: User ID
+          description: Artist ID
           required: true
           style: simple
           explode: false
@@ -315,16 +312,16 @@ paths:
     post:
       summary: Reset password 
       tags:
-      - User Enrollment
+      - Artist-Account Management
       description: Reset password
       consumes:
         - application/json
       produces:
         - application/json
       parameters:
-        - name: userId
+        - name: artistId
           in: path
-          description: User ID
+          description: Artist ID
           required: true
           style: simple
           explode: false
@@ -382,21 +379,20 @@ paths:
               schema:
                 $ref: "#/definitions/ErrorResponse"
    
-
-  "/api/user/{userId}/change-password":
+  "/api/artist/{artistId}/change-password":
     put:
       summary: Change password
       tags:
-      - User Enrollment
+      - Artist-Account Management
       description: Change password
       consumes:
         - application/json
       produces:
         - application/json
       parameters:
-        - name: userId
+        - name: artistId
           in: path
-          description: User ID
+          description: Artist ID
           required: true
           style: simple
           explode: false
@@ -435,7 +431,65 @@ paths:
       security:
       - bearerAuth: []
   
- 
+  "/api/artist/{artistId}":
+    get:
+      summary: Get artist profile
+      tags:
+      - Artist
+      description: Summary of artist profile
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+          - name: artistId
+            in: path
+            description: Artist ID
+            required: false
+            style: simple
+            explode: false
+            schema:
+              type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: true
+                    result:
+                      type: object
+                      example: {
+                        "artistId": 1,
+                        "username": "bodcristobal",
+                        "firstName": "Jodie",
+                        "middleName": "Pacay",
+                        "lastName": "Cristobal",
+                        "mobileNumber": "09262449975",
+                        "dateOfBirth": "1994-01-06T00:00:00.000Z",
+                        "cityOfResidencePermanent": "Pasay",
+                        "provincePermanent": "Metro Manila",
+                        "regionPermanent": "NCR",
+                        "cityOfResidenceCurrent": "Manila",
+                        "provinceCurrent": "Metro Manila",
+                        "regionCurrent": "NCR",
+                        "socialMediaPage1": "www.google.com",
+                        "socialMediaPage2": "www.facebook.com",
+                        "socialMediaPage3": "www.twitter.com"
+                      }
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/ErrorResponse"
+      security:
+      - bearerAuth: []
+  
 definitions:
   accessTokenSource:
     properties:
